@@ -39,12 +39,11 @@ console.log(calenderTitle.padStart(leftPad).padEnd(width));
 
 // 曜日の配列を定義
 const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
-let arr = [];
-for (let i = 0; i < weekdays.length; i++) {
-  const d = weekdays[i];
-  arr.push("  " + d);
-}
-console.log(arr.join(""));
+
+// 既存の配列から空白を入れた新しい配列を作るためにmap関数を使用する
+const formattedWeekdays = weekdays.map((d) => "  " + d);
+
+console.log(formattedWeekdays.join(""));
 
 // セル表示を統一する
 const formatCell = (v) => {
@@ -61,30 +60,18 @@ for (let i = 1; i < 32; i++) {
   days.push(i);
 }
 
-// 日付の数を精査するために月のリストを作る
-const monthDays31 = [1, 3, 5, 7, 8, 10, 12];
-const monthdays30 = [4, 6, 9, 11];
-
-// うるう年を求める関数を定義する
-const isLeapYear = (year) =>
-  (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-
-// 日付を表示させるために該当月の最終日を特定しそれまでの日数の配列を返す関数
+//対象月の日数を正確に求めるためにDateオブジェクトの次月-前月をして日数を求める
 const getMonthDays = (month, year) => {
-  if (monthDays31.includes(month)) {
-    return days.slice(0, 31);
-  } else if (monthdays30.includes(month)) {
-    return days.slice(0, 30);
-  } else {
-    if (isLeapYear(year)) {
-      return days.slice(0, 29);
-    } else {
-      return days.slice(0, 28);
-    }
-  }
+  const thisMonthDay = new Date(year, month - 1, 1);
+  const nextMonthDay = new Date(year, month, 1);
+
+  const diffDays = nextMonthDay - thisMonthDay;
+
+  //ミリ秒を日付に変換する
+  const daysCount = diffDays / (24 * 60 * 60 * 1000);
+  return days.slice(0, daysCount);
 };
 
-// 対象月の日数を確認するために表示
 const monthDays = getMonthDays(month, year);
 
 // 1日を特定しセットバック数を決めるために1日を位置を取得する
