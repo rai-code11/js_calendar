@@ -1,68 +1,90 @@
-
-
 // 入力した文字列をリスト化す// 現在の西暦と月を表示させる
 const now = new Date();
 // 月を取得、月は0から始まるため+1
-const month = now.getMonth() + 1;
+let month = now.getMonth() + 1;
+
+// オプションで月を指定できるようにする
+if (process.argv.includes("-m")) {
+  const inx = process.argv.indexOf("-m");
+
+  if (inx + 1 < process.argv.length) {
+    month = parseInt(process.argv[inx + 1]);
+    try {
+      const inputMonth = parseInt(month, 10);
+
+      if (isNaN(month) || month < 1 || month > 12) {
+        throw new Error();
+      }
+    } catch (e) {
+      console.error(`${month} is neither a month number (1..12) nor a name`);
+      // プログラムをここで終了させる
+      process.exit(1);
+    }
+  }
+}
+
 // 年を取得
 const year = now.getFullYear();
 // カレンダーのタイトルを作成
 const calenderTitle = `${month}月 ${year}年`;
 // セルの幅を定義
-const cell = 3;
+const cell = 4;
 // カレンダー全体の幅を計算
 const width = cell * 7;
-// タイトルを中央に配置して表示
-console.log(
-  calenderTitle.padStart((width + calenderTitle.length) / 2).padEnd(width)
-);
+
+// カレンダーのタイトルを中央揃えで表示
+const leftPad = Math.floor((width + calenderTitle.length) / 2);
+console.log(calenderTitle.padStart(leftPad).padEnd(width));
 
 // 曜日の配列を定義
 const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
-console.log(weekdays.join("  "));
 
-// 日付部分を作成するために1~31日の配列を作成する
-// for文
-// const _days = [];
-// for (let i = 0; i < 31; i++) {
-//   _days.push(i + 1);
-// }
+// 既存の配列から空白を入れた新しい配列を作るためにmap関数を使用する
+const formattedWeekdays = weekdays.map((d) => "  " + d);
 
-// Array.form
-const days = Array.from({ length: 31 }, (_, i) => i + 1);
+console.log(formattedWeekdays.join(""));
 
-// 日付を表示させるために該当月の最終日を求める
-// 日付の数を精査するために月のリストを作る
-const monthDays31 = [1, 3, 5, 7, 8, 10, 12];
-const monthdays30 = [4, 6, 9, 11];
-
-// うるう年を求める関数を定義する
-const isLeapYear = (year) =>
-  (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-
-const getLastDayElement = (year, month, days) => {
-  let daysInMonth;
-
-  if (month === 2) {
-    daysInMonth = isLeapYear(year) ? 29 : 28;
-  } else if 
+// セル表示を統一する
+const formatCell = (v) => {
+  if (v === "") {
+    return " ".repeat(cell);
+  } else {
+    return String(v).padStart(cell, " ");
+  }
 };
 
-if (month === monthDays31) {
-  const last_day = days[30];
-} else if (month === monthDays30) {
-  const last_day = days[29];
-} else {
-  if (isLeapYear(year)) {
-    const last_day = days[28];
-  } else {
-    const last_day = days[27];
-  }
+// 日付部分を作成するために1~31日の配列を作成する
+const days = [];
+for (let i = 1; i < 32; i++) {
+  days.push(i);
 }
 
-// 1日を特定しセットバック数を決めるために1日を位置を取得する
-const day1 = now.setDate(1);
-// 曜日の数字を求める
-const day1Num = now.getDay();
+//対象月の日数を正確に求めるためにDateオブジェクトの次月-前月をして日数を求める
+const getMonthDays = (month, year) => {
+  const thisMonthDay = new Date(year, month - 1, 1);
+  const nextMonthDay = new Date(year, month, 1);
 
-// 1日の位置を指定するために曜日の数字分1日の前に空白を入れる
+  const diffDays = nextMonthDay - thisMonthDay;
+
+  //ミリ秒を日付に変換する
+  const daysCount = diffDays / (24 * 60 * 60 * 1000);
+  return days.slice(0, daysCount);
+};
+
+const monthDays = getMonthDays(month, year);
+
+// 1日を特定しセットバック数を決めるために1日を位置を取得する
+const firstDate = new Date(year, month - 1, 1);
+// 曜日の数字を求める
+const getFirstDayBackNum = firstDate.getDay();
+
+// 日付部分を作成するためにセットバック数分の空白と日付を結合する
+const monthStart = Array(getFirstDayBackNum).fill("").concat(monthDays);
+
+// 日付部分を1週間ごとに分割する
+const monthStartLineBreak = [];
+for (const [i, v] of monthStart.entries()) {
+  monthStartLineBreak.push(formatCell(v));
+  if ((i + 1) % 7 === 0) monthStartLineBreak.push("\n");
+}
+console.log(monthStartLineBreak.join(""));
